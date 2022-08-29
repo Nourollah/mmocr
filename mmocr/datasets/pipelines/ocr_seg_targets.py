@@ -82,9 +82,7 @@ class OCRSegTargets:
             ]
             shrink_points.append(shrink_point)
 
-        poly = np.array(shrink_points)
-
-        return poly
+        return np.array(shrink_points)
 
     def shrink_char_rect(self, char_rect, shrink_ratio):
         """Shrink char box in style of rectangle.
@@ -102,10 +100,14 @@ class OCRSegTargets:
         y_min_s = round((y_min + y_max - h * shrink_ratio) / 2)
         x_max_s = round((x_min + x_max + w * shrink_ratio) / 2)
         y_max_s = round((y_min + y_max + h * shrink_ratio) / 2)
-        poly = np.array([[x_min_s, y_min_s], [x_max_s, y_min_s],
-                         [x_max_s, y_max_s], [x_min_s, y_max_s]])
-
-        return poly
+        return np.array(
+            [
+                [x_min_s, y_min_s],
+                [x_max_s, y_min_s],
+                [x_max_s, y_max_s],
+                [x_min_s, y_max_s],
+            ]
+        )
 
     def generate_kernels(self,
                          resize_shape,

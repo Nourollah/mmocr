@@ -135,11 +135,14 @@ def eval_hmean_ic13(det_boxes,
                             or gt_id in gt_ignored_index
                             or pred_id in pred_ignored_index):
                         continue
-                    match = eval_utils.one2one_match_ic13(
-                        gt_id, pred_id, recall_mat, precision_mat, recall_thr,
-                        precision_thr)
-
-                    if match:
+                    if match := eval_utils.one2one_match_ic13(
+                        gt_id,
+                        pred_id,
+                        recall_mat,
+                        precision_mat,
+                        recall_thr,
+                        precision_thr,
+                    ):
                         gt_point = np.array(gt_points[gt_id])
                         det_point = np.array(pred_points[pred_id])
 

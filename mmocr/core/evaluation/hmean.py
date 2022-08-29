@@ -166,7 +166,7 @@ def eval_hmean(results,
                 logger=logger)
             if result['hmean'] > best_result['hmean']:
                 best_result = result
-        eval_results[metric + ':recall'] = best_result['recall']
-        eval_results[metric + ':precision'] = best_result['precision']
-        eval_results[metric + ':hmean'] = best_result['hmean']
+        eval_results[f'{metric}:recall'] = best_result['recall']
+        eval_results[f'{metric}:precision'] = best_result['precision']
+        eval_results[f'{metric}:hmean'] = best_result['hmean']
     return eval_results

@@ -82,8 +82,7 @@ class BaseTextDetTargets:
         """
         poly = polygon.reshape(-1, 2)
         rect = cv2.minAreaRect(poly.astype(np.int32))
-        size = rect[1]
-        return size
+        return rect[1]
 
     def generate_kernels(self,
                          img_size,

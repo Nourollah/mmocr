@@ -55,11 +55,11 @@ class LoadTextAnnotations(LoadAnnotations):
         """
 
         polygons = [np.array(p).astype(np.float32) for p in polygons]
-        valid_polygons = []
-        for polygon in polygons:
-            if len(polygon) % 2 == 0 and len(polygon) >= 6:
-                valid_polygons.append(polygon)
-        return valid_polygons
+        return [
+            polygon
+            for polygon in polygons
+            if len(polygon) % 2 == 0 and len(polygon) >= 6
+        ]
 
     def _load_masks(self, results):
         ann_info = results['ann_info']
@@ -169,7 +169,7 @@ class LoadImageFromLMDB(object):
             try:
                 img = mmcv.imfrombytes(imgbuf, flag=self.color_type)
             except IOError:
-                print('Corrupted image for {}'.format(img_key))
+                print(f'Corrupted image for {img_key}')
                 return None
 
             results['filename'] = img_key
@@ -181,8 +181,7 @@ class LoadImageFromLMDB(object):
             return results
 
     def __repr__(self):
-        return '{} (color_type={})'.format(self.__class__.__name__,
-                                           self.color_type)
+        return f'{self.__class__.__name__} (color_type={self.color_type})'
 
     def __del__(self):
         if self.env is not None:

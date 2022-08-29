@@ -73,7 +73,7 @@ class IcdarDataset(CocoDataset):
             info['filename'] = info['file_name']
             data_infos.append(info)
             count = count + 1
-            if count > self.select_first_k and self.select_first_k > 0:
+            if count > self.select_first_k > 0:
                 break
         return data_infos
 
@@ -176,7 +176,7 @@ class IcdarDataset(CocoDataset):
             img_infos.append(img_info)
             ann_infos.append(self.get_ann_info(i))
 
-        eval_results = eval_hmean(
+        return eval_hmean(
             results,
             img_infos,
             ann_infos,
@@ -186,6 +186,5 @@ class IcdarDataset(CocoDataset):
             max_score_thr=max_score_thr,
             step=step,
             logger=logger,
-            rank_list=rank_list)
-
-        return eval_results
+            rank_list=rank_list,
+        )

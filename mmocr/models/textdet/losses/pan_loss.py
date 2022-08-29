@@ -148,7 +148,7 @@ class PANLoss(nn.Module):
         coefs = [1, self.alpha, self.beta, self.beta]
         losses = [item * scale for item, scale in zip(losses, coefs)]
 
-        results = dict()
+        results = {}
         results.update(
             loss_text=losses[0],
             loss_kernel=losses[1],
@@ -301,9 +301,9 @@ class PANLoss(nn.Module):
         neg_score = text_score[gt_text <= 0.5]
         neg_score_sorted, _ = torch.sort(neg_score, descending=True)
         threshold = neg_score_sorted[neg_num - 1]
-        sampled_mask = (((text_score >= threshold) + (gt_text > 0.5)) > 0) * (
-            gt_mask > 0.5)
-        return sampled_mask
+        return (((text_score >= threshold) + (gt_text > 0.5)) > 0) * (
+            gt_mask > 0.5
+        )
 
     def ohem_batch(self, text_scores, gt_texts, gt_mask):
         """OHEM sampling for a batch of imgs.
@@ -323,10 +323,10 @@ class PANLoss(nn.Module):
         assert text_scores.shape == gt_texts.shape
         assert gt_texts.shape == gt_mask.shape
 
-        sampled_masks = []
-        for i in range(text_scores.shape[0]):
-            sampled_masks.append(
-                self.ohem_img(text_scores[i], gt_texts[i], gt_mask[i]))
+        sampled_masks = [
+            self.ohem_img(text_scores[i], gt_texts[i], gt_mask[i])
+            for i in range(text_scores.shape[0])
+        ]
 
         sampled_masks = torch.stack(sampled_masks)
 

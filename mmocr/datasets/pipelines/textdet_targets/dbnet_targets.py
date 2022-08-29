@@ -68,10 +68,7 @@ class DBNetTargets(BaseTextDetTargets):
         if abs(area) < 1:
             return True
         short_size = min(self.polygon_size(poly))
-        if short_size < self.min_short_size:
-            return True
-
-        return False
+        return short_size < self.min_short_size
 
     def ignore_texts(self, results, ignore_tags):
         """Ignore gt masks and gt_labels while padding gt_masks_ignore in

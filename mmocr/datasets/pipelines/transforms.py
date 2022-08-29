@@ -87,7 +87,7 @@ class RandomCropInstances:
         kept_bboxes = []
         kept_inx = []
         canvas_poly = eval_utils.box2polygon(canvas_bbox)
-        tl = canvas_bbox[0:2]
+        tl = canvas_bbox[:2]
 
         for idx, bbox in enumerate(bboxes):
             poly = eval_utils.box2polygon(bbox)
@@ -172,8 +172,7 @@ class RandomCropInstances:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -186,8 +185,7 @@ class RandomRotateTextDet:
 
     @staticmethod
     def sample_angle(max_angle):
-        angle = np.random.random_sample() * 2 * max_angle - max_angle
-        return angle
+        return np.random.random_sample() * 2 * max_angle - max_angle
 
     @staticmethod
     def rotate_img(img, angle):
@@ -219,8 +217,7 @@ class RandomRotateTextDet:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -242,8 +239,7 @@ class ColorJitter:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -300,9 +296,7 @@ class ScaleAspectJitter(Resize):
     def sample_from_range(range):
         assert len(range) == 2
         min_value, max_value = min(range), max(range)
-        value = np.random.random_sample() * (max_value - min_value) + min_value
-
-        return value
+        return np.random.random_sample() * (max_value - min_value) + min_value
 
     def _random_scale(self, results):
 
@@ -312,7 +306,7 @@ class ScaleAspectJitter(Resize):
             results['scale'] = (int(w), int(h))  # (w,h)
             results['scale_idx'] = None
             return
-        h, w = results['img'].shape[0:2]
+        h, w = results['img'].shape[:2]
         if self.resize_type == 'long_short_bound':
             scale1 = 1
             if max(h, w) > self.long_size_bound:
@@ -366,8 +360,7 @@ class AffineJitter:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -509,8 +502,7 @@ class RandomCropPolyInstances:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -566,12 +558,10 @@ class RandomRotatePolyInstances:
         canvas_h = int(w * math.fabs(sin) + h * math.fabs(cos))
         canvas_w = int(w * math.fabs(cos) + h * math.fabs(sin))
 
-        canvas_size = (canvas_h, canvas_w)
-        return canvas_size
+        return canvas_h, canvas_w
 
     def sample_angle(self, max_angle):
-        angle = np.random.random_sample() * 2 * max_angle - max_angle
-        return angle
+        return np.random.random_sample() * 2 * max_angle - max_angle
 
     def rotate_img(self, img, angle, canvas_size):
         h, w = img.shape[:2]
@@ -635,8 +625,7 @@ class RandomRotatePolyInstances:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -689,10 +678,7 @@ class SquareResizePad:
                               np.random.randint(0, w * 7 // 8))
             img_cut = img[h_ind:(h_ind + h // 9), w_ind:(w_ind + w // 9)]
             expand_img = mmcv.imresize(img_cut, (pad_size, pad_size))
-        if h > w:
-            y0, x0 = 0, (h - w) // 2
-        else:
-            y0, x0 = (w - h) // 2, 0
+        y0, x0 = (0, (h - w) // 2) if h > w else ((w - h) // 2, 0)
         expand_img[y0:y0 + h, x0:x0 + w] = img
         offset = (x0, y0)
 
@@ -733,8 +719,7 @@ class SquareResizePad:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -748,10 +733,10 @@ class RandomScaling:
             scale (tuple(float)) : The range of scaling.
         """
         assert isinstance(size, int)
-        assert isinstance(scale, float) or isinstance(scale, tuple)
+        assert isinstance(scale, (float, tuple))
         self.size = size
         self.scale = scale if isinstance(scale, tuple) \
-            else (1 - scale, 1 + scale)
+                else (1 - scale, 1 + scale)
 
     def __call__(self, results):
         image = results['img']
@@ -801,7 +786,7 @@ class RandomCropFlip:
         self.min_area_ratio = min_area_ratio
 
     def __call__(self, results):
-        for i in range(self.iter_num):
+        for _ in range(self.iter_num):
             results = self.random_crop_flip(results)
         return results
 
@@ -854,7 +839,7 @@ class RandomCropFlip:
                 ppi = plg(polygon[0].reshape(-1, 2))
                 ppiou = eval_utils.poly_intersection(ppi, pp)
                 if np.abs(ppiou - float(ppi.area)) > self.epsilon and \
-                        np.abs(ppiou) > self.epsilon:
+                            np.abs(ppiou) > self.epsilon:
                     fail_flag = True
                     break
                 elif np.abs(ppiou - float(ppi.area)) < self.epsilon:
@@ -866,7 +851,7 @@ class RandomCropFlip:
                 ppi = plg(polygon[0].reshape(-1, 2))
                 ppiou = eval_utils.poly_intersection(ppi, pp)
                 if np.abs(ppiou - float(ppi.area)) > self.epsilon and \
-                        np.abs(ppiou) > self.epsilon:
+                            np.abs(ppiou) > self.epsilon:
                     fail_flag = True
                     break
                 elif np.abs(ppiou - float(ppi.area)) < self.epsilon:
@@ -993,11 +978,13 @@ class PyramidRescale:
 
     def __init__(self, factor=4, base_shape=(128, 512), randomize_factor=True):
         assert isinstance(factor, int)
-        assert isinstance(base_shape, list) or isinstance(base_shape, tuple)
+        assert isinstance(base_shape, (list, tuple))
         assert len(base_shape) == 2
         assert isinstance(randomize_factor, bool)
-        self.factor = factor if not randomize_factor else np.random.randint(
-            0, factor + 1)
+        self.factor = (
+            np.random.randint(0, factor + 1) if randomize_factor else factor
+        )
+
         self.base_w, self.base_h = base_shape
 
     def __call__(self, results):

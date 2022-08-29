@@ -49,7 +49,7 @@ class FCELoss(nn.Module):
         """
         assert isinstance(preds, list)
         assert p3_maps[0].shape[0] == 4 * self.fourier_degree + 5,\
-            'fourier degree not equal in FCEhead and FCEtarget'
+                'fourier degree not equal in FCEhead and FCEtarget'
 
         device = preds[0][0].device
         # to tensor
@@ -74,14 +74,12 @@ class FCELoss(nn.Module):
             else:
                 loss_reg_y += sum(loss)
 
-        results = dict(
+        return dict(
             loss_text=loss_tr,
             loss_center=loss_tcl,
             loss_reg_x=loss_reg_x,
             loss_reg_y=loss_reg_y,
         )
-
-        return results
 
     def forward_single(self, pred, gt):
         cls_pred = pred[0].permute(0, 2, 3, 1).contiguous()

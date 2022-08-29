@@ -77,5 +77,4 @@ class TextSnakeHead(HeadMixin, BaseModule):
         Returns:
             Tensor: A tensor of shape :math:`(N, 5, H, W)`.
         """
-        outputs = self.out_conv(inputs)
-        return outputs
+        return self.out_conv(inputs)

@@ -20,6 +20,9 @@ files = sorted(glob.glob('*_models.md'))
 
 stats = []
 
+# count papers
+exclude_papertype = ['ABSTRACT', 'IMAGE']
+exclude_expr = ''.join(f'(?!{s})' for s in exclude_papertype)
 for f in files:
     with open(f, 'r') as content_file:
         content = content_file.read()
@@ -34,14 +37,13 @@ for f in files:
     # title
     title = content.split('\n')[0].replace('#', '')
 
-    # count papers
-    exclude_papertype = ['ABSTRACT', 'IMAGE']
-    exclude_expr = ''.join(f'(?!{s})' for s in exclude_papertype)
     expr = rf'<!-- \[{exclude_expr}([A-Z]+?)\] -->'\
         r'\s*\n.*?\btitle\s*=\s*{(.*?)}'
-    papers = set(
+    papers = {
         (papertype, titlecase.titlecase(paper.lower().strip()))
-        for (papertype, paper) in re.findall(expr, content, re.DOTALL))
+        for (papertype, paper) in re.findall(expr, content, re.DOTALL)
+    }
+
     print(papers)
     # paper links
     revcontent = '\n'.join(list(reversed(content.splitlines())))
@@ -51,18 +53,28 @@ for f in files:
         paper_link = title2anchor(
             re.search(
                 rf'\btitle\s*=\s*{{\s*{q}\s*}}.*?\n## (.*?)\s*[,;]?\s*\n',
-                revcontent, re.DOTALL | re.IGNORECASE).group(1))
+                revcontent,
+                re.DOTALL | re.IGNORECASE,
+            )[1]
+        )
+
         paperlinks[p] = f'[{p}]({splitext(basename(f))[0]}.html#{paper_link})'
     paperlist = '\n'.join(
         sorted(f'    - [{t}] {paperlinks[x]}' for t, x in papers))
     # count configs
-    configs = set(x.lower().strip()
-                  for x in re.findall(r'https.*configs/.*\.py', content))
+    configs = {
+        x.lower().strip()
+        for x in re.findall(r'https.*configs/.*\.py', content)
+    }
+
 
     # count ckpts
-    ckpts = set(x.lower().strip()
-                for x in re.findall(r'https://download.*\.pth', content)
-                if 'mmocr' in x)
+    ckpts = {
+        x.lower().strip()
+        for x in re.findall(r'https://download.*\.pth', content)
+        if 'mmocr' in x
+    }
+
 
     statsmsg = f"""
 ## [{title}]({f})

@@ -178,7 +178,7 @@ def imshow_pred_boundary(img,
     assert utils.is_type_list(labels, int)
     assert utils.equal_len(boundaries_with_scores, labels)
     if len(boundaries_with_scores) == 0:
-        warnings.warn('0 text found in ' + out_file)
+        warnings.warn(f'0 text found in {out_file}')
         return None
 
     utils.valid_boundary(boundaries_with_scores[0])
@@ -406,15 +406,15 @@ def imshow_node(img,
             True,
             color=(255, 255, 0),
             thickness=1)
-        x_min = int(min([point[0] for point in new_box]))
-        y_min = int(min([point[1] for point in new_box]))
+        x_min = int(min(point[0] for point in new_box))
+        y_min = int(min(point[1] for point in new_box))
 
         # text
         pred_label = str(node_pred_label[i])
         if pred_label in idx_to_cls:
             pred_label = idx_to_cls[pred_label]
         pred_score = '{:.2f}'.format(node_pred_score[i])
-        text = pred_label + '(' + pred_score + ')'
+        text = f'{pred_label}({pred_score})'
         texts.append(text)
 
         # text box
@@ -448,11 +448,20 @@ def imshow_node(img,
 
 def gen_color():
     """Generate BGR color schemes."""
-    color_list = [(101, 67, 254), (154, 157, 252), (173, 205, 249),
-                  (123, 151, 138), (187, 200, 178), (148, 137, 69),
-                  (169, 200, 200), (155, 175, 131), (154, 194, 182),
-                  (178, 190, 137), (140, 211, 222), (83, 156, 222)]
-    return color_list
+    return [
+        (101, 67, 254),
+        (154, 157, 252),
+        (173, 205, 249),
+        (123, 151, 138),
+        (187, 200, 178),
+        (148, 137, 69),
+        (169, 200, 200),
+        (155, 175, 131),
+        (154, 194, 182),
+        (178, 190, 137),
+        (140, 211, 222),
+        (83, 156, 222),
+    ]
 
 
 def draw_polygons(img, polys):
@@ -486,7 +495,7 @@ def get_optimal_font_scale(text, width):
         text (str): Text in one box.
         width (int): The box width.
     """
-    for scale in reversed(range(0, 60, 1)):
+    for scale in reversed(range(60)):
         textSize = cv2.getTextSize(
             text,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
@@ -517,25 +526,21 @@ def draw_texts(img, texts, boxes=None, draw_box=True, on_ori_img=False):
         boxes = [[0, 0, w, 0, w, h, 0, h]]
     assert len(texts) == len(boxes)
 
-    if on_ori_img:
-        out_img = img
-    else:
-        out_img = np.ones((h, w, 3), dtype=np.uint8) * 255
+    out_img = img if on_ori_img else np.ones((h, w, 3), dtype=np.uint8) * 255
     for idx, (box, text) in enumerate(zip(boxes, texts)):
         if draw_box:
-            new_box = [[x, y] for x, y in zip(box[0::2], box[1::2])]
+            new_box = [[x, y] for x, y in zip(box[::2], box[1::2])]
             Pts = np.array([new_box], np.int32)
             cv2.polylines(
                 out_img, [Pts.reshape((-1, 1, 2))],
                 True,
                 color=color_list[idx % len(color_list)],
                 thickness=1)
-        min_x = int(min(box[0::2]))
+        min_x = int(min(box[::2]))
         max_y = int(
             np.mean(np.array(box[1::2])) + 0.2 *
             (max(box[1::2]) - min(box[1::2])))
-        font_scale = get_optimal_font_scale(
-            text, int(max(box[0::2]) - min(box[0::2])))
+        font_scale = get_optimal_font_scale(text, int(max(box[::2]) - min(box[::2])))
         cv2.putText(out_img, text, (min_x, max_y), cv2.FONT_HERSHEY_SIMPLEX,
                     font_scale, (0, 0, 0), 1)
 
@@ -594,7 +599,7 @@ def draw_texts_by_pil(img,
     for idx, (box, text, ori_point) in enumerate(zip(boxes, texts, draw_pos)):
         if len(text) == 0:
             continue
-        min_x, max_x = min(box[0::2]), max(box[0::2])
+        min_x, max_x = min(box[::2]), max(box[::2])
         min_y, max_y = min(box[1::2]), max(box[1::2])
         color = tuple(list(color_list[idx % len(color_list)])[::-1])
         if draw_box:
@@ -620,10 +625,7 @@ def draw_texts_by_pil(img,
 
     out_img = cv2.cvtColor(np.asarray(out_img), cv2.COLOR_RGB2BGR)
 
-    if return_text_size:
-        return out_img, text_sizes
-
-    return out_img
+    return (out_img, text_sizes) if return_text_size else out_img
 
 
 def is_contain_chinese(check_str):
@@ -634,10 +636,7 @@ def is_contain_chinese(check_str):
 
     Return True if contains Chinese, else False.
     """
-    for ch in check_str:
-        if u'\u4e00' <= ch <= u'\u9fff':
-            return True
-    return False
+    return any(u'\u4e00' <= ch <= u'\u9fff' for ch in check_str)
 
 
 def det_recog_show_result(img, end2end_res, out_file=None):

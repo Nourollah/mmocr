@@ -52,10 +52,9 @@ def update_pipeline_recog(cfg, idx=None):
                    None) and cfg.pipeline[1].type == 'MultiRotateAugOCR':
             warnings.warn(warning_msg)
             cfg.pipeline = [cfg.pipeline[0], *cfg.pipeline[1].transforms]
-    else:
-        if cfg[idx][1].type == 'MultiRotateAugOCR':
-            warnings.warn(warning_msg)
-            cfg[idx] = [cfg[idx][0], *cfg[idx][1].transforms]
+    elif cfg[idx][1].type == 'MultiRotateAugOCR':
+        warnings.warn(warning_msg)
+        cfg[idx] = [cfg[idx][0], *cfg[idx][1].transforms]
 
 
 def disable_text_recog_aug_test(cfg, set_types=None):

@@ -30,7 +30,7 @@ class OCRSegDataset(OCRDataset):
         assert utils.is_type_list(annotations, dict)
         assert 'char_box' in annotations[0]
         assert 'char_text' in annotations[0]
-        assert len(annotations[0]['char_box']) in [4, 8]
+        assert len(annotations[0]['char_box']) in {4, 8}
 
         chars, char_rects, char_quads = [], [], []
         for ann in annotations:

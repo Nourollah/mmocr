@@ -34,23 +34,23 @@ test1 = dict(
     pipeline=None,
     test_mode=True)
 
-test2 = {key: value for key, value in test1.items()}
+test2 = dict(test1)
 test2['img_prefix'] = test_img_prefix2
 test2['ann_file'] = test_ann_file2
 
-test3 = {key: value for key, value in test1.items()}
+test3 = dict(test1)
 test3['img_prefix'] = test_img_prefix3
 test3['ann_file'] = test_ann_file3
 
-test4 = {key: value for key, value in test1.items()}
+test4 = dict(test1)
 test4['img_prefix'] = test_img_prefix4
 test4['ann_file'] = test_ann_file4
 
-test5 = {key: value for key, value in test1.items()}
+test5 = dict(test1)
 test5['img_prefix'] = test_img_prefix5
 test5['ann_file'] = test_ann_file5
 
-test6 = {key: value for key, value in test1.items()}
+test6 = dict(test1)
 test6['img_prefix'] = test_img_prefix6
 test6['ann_file'] = test_ann_file6
 

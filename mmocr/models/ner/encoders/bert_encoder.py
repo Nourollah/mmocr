@@ -69,8 +69,8 @@ class BertEncoder(BaseModule):
         attention_masks = results['attention_masks'].to(device)
         token_type_ids = results['token_type_ids'].to(device)
 
-        outputs = self.bert(
+        return self.bert(
             input_ids=input_ids,
             attention_masks=attention_masks,
-            token_type_ids=token_type_ids)
-        return outputs
+            token_type_ids=token_type_ids,
+        )

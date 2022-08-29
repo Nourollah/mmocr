@@ -76,7 +76,7 @@ dataset_type = 'OCRDataset'
 
 train_prefix = 'data/chinese/'
 
-train_ann_file = train_prefix + 'labels/train.txt'
+train_ann_file = f'{train_prefix}labels/train.txt'
 
 train = dict(
     type=dataset_type,
@@ -95,7 +95,7 @@ train = dict(
 
 test_prefix = 'data/chineseocr/'
 
-test_ann_file = test_prefix + 'labels/test.txt'
+test_ann_file = f'{test_prefix}labels/test.txt'
 
 test = dict(
     type=dataset_type,

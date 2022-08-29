@@ -57,7 +57,7 @@ class FCEPostprocessor(BasePostprocessor):
         assert len(preds) == 2
 
         cls_pred = preds[0][0]
-        tr_pred = cls_pred[0:2].softmax(dim=0).data.cpu().numpy()
+        tr_pred = cls_pred[:2].softmax(dim=0).data.cpu().numpy()
         tcl_pred = cls_pred[2:].softmax(dim=0).data.cpu().numpy()
 
         reg_pred = preds[1][0].permute(1, 2, 0).data.cpu().numpy()

@@ -256,9 +256,7 @@ class TextSnakeTargets(BaseTextDetTargets):
             p_coords = np.dot(weight, line[[edge_ind, edge_ind + 1]])
             points.append(p_coords)
         points.append(line[-1])
-        resampled_line = np.vstack(points)
-
-        return resampled_line
+        return np.vstack(points)
 
     def resample_sidelines(self, sideline1, sideline2, resample_step):
         """Resample two sidelines to be of the same points number according to
@@ -322,7 +320,7 @@ class TextSnakeTargets(BaseTextDetTargets):
         assert (center_region_mask.shape == radius_map.shape == sin_map.shape
                 == cos_map.shape)
         assert isinstance(region_shrink_ratio, float)
-        for i in range(0, len(center_line) - 1):
+        for i in range(len(center_line) - 1):
 
             top_mid_point = (top_line[i] + top_line[i + 1]) / 2
             bot_mid_point = (bot_line[i] + bot_line[i + 1]) / 2
@@ -381,11 +379,12 @@ class TextSnakeTargets(BaseTextDetTargets):
             polygon_points = np.array(text_instance).reshape(-1, 2)
 
             n = len(polygon_points)
-            keep_inds = []
-            for i in range(n):
-                if norm(polygon_points[i] -
-                        polygon_points[(i + 1) % n]) > 1e-5:
-                    keep_inds.append(i)
+            keep_inds = [
+                i
+                for i in range(n)
+                if norm(polygon_points[i] - polygon_points[(i + 1) % n]) > 1e-5
+            ]
+
             polygon_points = polygon_points[keep_inds]
 
             _, _, top_line, bot_line = self.reorder_poly_edge(polygon_points)
@@ -399,11 +398,10 @@ class TextSnakeTargets(BaseTextDetTargets):
                     center_line = center_line[::-1]
                     resampled_top_line = resampled_top_line[::-1]
                     resampled_bot_line = resampled_bot_line[::-1]
-            else:
-                if (center_line[-1] - center_line[0])[0] < 0:
-                    center_line = center_line[::-1]
-                    resampled_top_line = resampled_top_line[::-1]
-                    resampled_bot_line = resampled_bot_line[::-1]
+            elif (center_line[-1] - center_line[0])[0] < 0:
+                center_line = center_line[::-1]
+                resampled_top_line = resampled_top_line[::-1]
+                resampled_bot_line = resampled_bot_line[::-1]
 
             line_head_shrink_len = norm(resampled_top_line[0] -
                                         resampled_bot_line[0]) / 4.0

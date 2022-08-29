@@ -71,10 +71,7 @@ class HeadMixin:
                 boundaries,
                 1.0 / self.downsample_ratio / img_metas[0]['scale_factor'])
 
-        results = dict(
-            boundary_result=boundaries, filename=img_metas[0]['filename'])
-
-        return results
+        return dict(boundary_result=boundaries, filename=img_metas[0]['filename'])
 
     def loss(self, pred_maps, **kwargs):
         """Compute the loss for scene text detection.
@@ -86,6 +83,4 @@ class HeadMixin:
         Returns:
             dict: The dict for losses.
         """
-        losses = self.loss_module(pred_maps, self.downsample_ratio, **kwargs)
-
-        return losses
+        return self.loss_module(pred_maps, self.downsample_ratio, **kwargs)

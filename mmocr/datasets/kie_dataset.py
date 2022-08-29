@@ -103,7 +103,7 @@ class KIEDataset(BaseDataset):
             sorted_box = sort_vertex8(box[:8])
             boxes.append(sorted_box)
             text = ann['text']
-            texts.append(ann['text'])
+            texts.append(text)
             text_ind = [self.dict[c] for c in text if c in self.dict]
             text_inds.append(text_ind)
             labels.append(ann.get('label', 0))
@@ -208,7 +208,7 @@ class KIEDataset(BaseDataset):
 
     def pad_text_indices(self, text_inds):
         """Pad text index to same length."""
-        max_len = max([len(text_ind) for text_ind in text_inds])
+        max_len = max(len(text_ind) for text_ind in text_inds)
         padded_text_inds = -np.ones((len(text_inds), max_len), np.int32)
         for idx, text_ind in enumerate(text_inds):
             padded_text_inds[idx, :len(text_ind)] = np.array(text_ind)

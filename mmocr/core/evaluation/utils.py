@@ -282,28 +282,28 @@ def one2one_match_ic13(gt_id, det_id, recall_mat, precision_mat, recall_thr,
     assert 0 <= recall_thr <= 1
     assert 0 <= precision_thr <= 1
 
-    cont = 0
-    for i in range(recall_mat.shape[1]):
-        if recall_mat[gt_id,
-                      i] > recall_thr and precision_mat[gt_id,
-                                                        i] > precision_thr:
-            cont += 1
+    cont = sum(
+        recall_mat[gt_id, i] > recall_thr
+        and precision_mat[gt_id, i] > precision_thr
+        for i in range(recall_mat.shape[1])
+    )
+
     if cont != 1:
         return False
 
-    cont = 0
-    for i in range(recall_mat.shape[0]):
-        if recall_mat[i, det_id] > recall_thr and precision_mat[
-                i, det_id] > precision_thr:
-            cont += 1
+    cont = sum(
+        recall_mat[i, det_id] > recall_thr
+        and precision_mat[i, det_id] > precision_thr
+        for i in range(recall_mat.shape[0])
+    )
+
     if cont != 1:
         return False
 
-    if recall_mat[gt_id, det_id] > recall_thr and precision_mat[
-            gt_id, det_id] > precision_thr:
-        return True
-
-    return False
+    return (
+        recall_mat[gt_id, det_id] > recall_thr
+        and precision_mat[gt_id, det_id] > precision_thr
+    )
 
 
 def one2many_match_ic13(gt_id, recall_mat, precision_mat, recall_thr,
@@ -342,14 +342,15 @@ def one2many_match_ic13(gt_id, recall_mat, precision_mat, recall_thr,
     many_sum = 0.
     det_ids = []
     for det_id in range(recall_mat.shape[1]):
-        if gt_match_flag[gt_id] == 0 and det_match_flag[
-                det_id] == 0 and det_id not in det_ignored_index:
-            if precision_mat[gt_id, det_id] >= precision_thr:
-                many_sum += recall_mat[gt_id, det_id]
-                det_ids.append(det_id)
-    if many_sum >= recall_thr:
-        return True, det_ids
-    return False, []
+        if (
+            gt_match_flag[gt_id] == 0
+            and det_match_flag[det_id] == 0
+            and det_id not in det_ignored_index
+            and precision_mat[gt_id, det_id] >= precision_thr
+        ):
+            many_sum += recall_mat[gt_id, det_id]
+            det_ids.append(det_id)
+    return (True, det_ids) if many_sum >= recall_thr else (False, [])
 
 
 def many2one_match_ic13(det_id, recall_mat, precision_mat, recall_thr,
@@ -388,14 +389,15 @@ def many2one_match_ic13(det_id, recall_mat, precision_mat, recall_thr,
     many_sum = 0.
     gt_ids = []
     for gt_id in range(recall_mat.shape[0]):
-        if gt_match_flag[gt_id] == 0 and det_match_flag[
-                det_id] == 0 and gt_id not in gt_ignored_index:
-            if recall_mat[gt_id, det_id] >= recall_thr:
-                many_sum += precision_mat[gt_id, det_id]
-                gt_ids.append(gt_id)
-    if many_sum >= precision_thr:
-        return True, gt_ids
-    return False, []
+        if (
+            gt_match_flag[gt_id] == 0
+            and det_match_flag[det_id] == 0
+            and gt_id not in gt_ignored_index
+            and recall_mat[gt_id, det_id] >= recall_thr
+        ):
+            many_sum += precision_mat[gt_id, det_id]
+            gt_ids.append(gt_id)
+    return (True, gt_ids) if many_sum >= precision_thr else (False, [])
 
 
 def points_center(points):
@@ -430,7 +432,7 @@ def box_diag(box):
     assert isinstance(box, np.ndarray)
     assert box.size == 8
 
-    return point_distance(box[0:2], box[4:6])
+    return point_distance(box[:2], box[4:6])
 
 
 def filter_2dlist_result(results, scores, score_thr):

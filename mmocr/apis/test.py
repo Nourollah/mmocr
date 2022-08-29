@@ -74,77 +74,72 @@ def single_gpu_test(model,
             result = model(return_loss=False, rescale=True, **data)
 
         batch_size = len(result)
-        if show or out_dir:
-            if is_kie:
-                img_tensor = data['img'].data[0]
-                if img_tensor.shape[0] != 1:
-                    raise KeyError('Visualizing KIE outputs in batches is'
-                                   'currently not supported.')
-                gt_bboxes = data['gt_bboxes'].data[0]
-                img_metas = data['img_metas'].data[0]
-                must_keys = ['img_norm_cfg', 'ori_filename', 'img_shape']
-                for key in must_keys:
-                    if key not in img_metas[0]:
-                        raise KeyError(
-                            f'Please add {key} to the "meta_keys" in config.')
-                # for no visual model
-                if np.prod(img_tensor.shape) == 0:
-                    imgs = []
-                    for img_meta in img_metas:
-                        try:
-                            img = mmcv.imread(img_meta['filename'])
-                        except Exception as e:
-                            print(f'Load image with error: {e}, '
-                                  'use empty image instead.')
-                            img = np.ones(
-                                img_meta['img_shape'], dtype=np.uint8)
-                        imgs.append(img)
-                else:
-                    imgs = tensor2imgs(img_tensor,
-                                       **img_metas[0]['img_norm_cfg'])
-                for i, img in enumerate(imgs):
-                    h, w, _ = img_metas[i]['img_shape']
-                    img_show = img[:h, :w, :]
-                    if out_dir:
-                        out_file = osp.join(out_dir,
-                                            img_metas[i]['ori_filename'])
-                    else:
-                        out_file = None
-
-                    model.module.show_result(
-                        img_show,
-                        result[i],
-                        gt_bboxes[i],
-                        show=show,
-                        out_file=out_file)
+        if show and is_kie or not show and out_dir and is_kie:
+            img_tensor = data['img'].data[0]
+            if img_tensor.shape[0] != 1:
+                raise KeyError('Visualizing KIE outputs in batches is'
+                               'currently not supported.')
+            gt_bboxes = data['gt_bboxes'].data[0]
+            img_metas = data['img_metas'].data[0]
+            must_keys = ['img_norm_cfg', 'ori_filename', 'img_shape']
+            for key in must_keys:
+                if key not in img_metas[0]:
+                    raise KeyError(
+                        f'Please add {key} to the "meta_keys" in config.')
+            # for no visual model
+            if np.prod(img_tensor.shape) == 0:
+                imgs = []
+                for img_meta in img_metas:
+                    try:
+                        img = mmcv.imread(img_meta['filename'])
+                    except Exception as e:
+                        print(f'Load image with error: {e}, '
+                              'use empty image instead.')
+                        img = np.ones(
+                            img_meta['img_shape'], dtype=np.uint8)
+                    imgs.append(img)
             else:
-                img_tensor, img_metas, img_norm_cfg = \
-                    retrieve_img_tensor_and_meta(data)
+                imgs = tensor2imgs(img_tensor,
+                                   **img_metas[0]['img_norm_cfg'])
+            for i, img in enumerate(imgs):
+                h, w, _ = img_metas[i]['img_shape']
+                img_show = img[:h, :w, :]
+                out_file = (
+                    osp.join(out_dir, img_metas[i]['ori_filename'])
+                    if out_dir
+                    else None
+                )
 
-                if img_tensor.size(1) == 1:
-                    imgs = tensor2grayimgs(img_tensor, **img_norm_cfg)
-                else:
-                    imgs = tensor2imgs(img_tensor, **img_norm_cfg)
-                assert len(imgs) == len(img_metas)
+                model.module.show_result(
+                    img_show,
+                    result[i],
+                    gt_bboxes[i],
+                    show=show,
+                    out_file=out_file)
+        elif show or out_dir:
+            img_tensor, img_metas, img_norm_cfg = \
+                retrieve_img_tensor_and_meta(data)
 
-                for j, (img, img_meta) in enumerate(zip(imgs, img_metas)):
-                    img_shape, ori_shape = img_meta['img_shape'], img_meta[
-                        'ori_shape']
-                    img_show = img[:img_shape[0], :img_shape[1]]
-                    img_show = mmcv.imresize(img_show,
-                                             (ori_shape[1], ori_shape[0]))
+            if img_tensor.size(1) == 1:
+                imgs = tensor2grayimgs(img_tensor, **img_norm_cfg)
+            else:
+                imgs = tensor2imgs(img_tensor, **img_norm_cfg)
+            assert len(imgs) == len(img_metas)
 
-                    if out_dir:
-                        out_file = osp.join(out_dir, img_meta['ori_filename'])
-                    else:
-                        out_file = None
+            for j, (img, img_meta) in enumerate(zip(imgs, img_metas)):
+                img_shape, ori_shape = img_meta['img_shape'], img_meta[
+                    'ori_shape']
+                img_show = img[:img_shape[0], :img_shape[1]]
+                img_show = mmcv.imresize(img_show,
+                                         (ori_shape[1], ori_shape[0]))
 
-                    model.module.show_result(
-                        img_show,
-                        result[j],
-                        show=show,
-                        out_file=out_file,
-                        score_thr=show_score_thr)
+                out_file = osp.join(out_dir, img_meta['ori_filename']) if out_dir else None
+                model.module.show_result(
+                    img_show,
+                    result[j],
+                    show=show,
+                    out_file=out_file,
+                    score_thr=show_score_thr)
 
         # encode mask results
         if isinstance(result[0], tuple):

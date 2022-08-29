@@ -8,8 +8,7 @@ from torch.nn import init
 class MeanAggregator(nn.Module):
 
     def forward(self, features, A):
-        x = torch.bmm(A, features)
-        return x
+        return torch.bmm(A, features)
 
 
 class GraphConv(nn.Module):
@@ -71,6 +70,4 @@ class GCN(nn.Module):
         for graph_ind in range(num_local_graphs):
             edge_feat[graph_ind, :, :] = x[graph_ind, knn_inds[graph_ind]]
         edge_feat = edge_feat.view(-1, mid_feat_len)
-        pred = self.classifier(edge_feat)
-
-        return pred
+        return self.classifier(edge_feat)

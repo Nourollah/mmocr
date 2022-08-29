@@ -45,5 +45,4 @@ class NerDataset(BaseDataset):
              'acc', 'recall', 'f1-score'.
         """
         gt_infos = list(self.data_infos)
-        eval_results = eval_ner_f1(results, gt_infos)
-        return eval_results
+        return eval_ner_f1(results, gt_infos)

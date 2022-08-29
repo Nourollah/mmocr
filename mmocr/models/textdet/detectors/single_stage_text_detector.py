@@ -35,8 +35,7 @@ class SingleStageTextDetector(SingleStageDetector):
         """
         x = self.extract_feat(img)
         preds = self.bbox_head(x)
-        losses = self.bbox_head.loss(preds, **kwargs)
-        return losses
+        return self.bbox_head.loss(preds, **kwargs)
 
     def simple_test(self, img, img_metas, rescale=False):
         x = self.extract_feat(img)
@@ -46,16 +45,13 @@ class SingleStageTextDetector(SingleStageDetector):
         if torch.onnx.is_in_onnx_export():
             return outs
 
-        if len(img_metas) > 1:
-            boundaries = [
-                self.bbox_head.get_boundary(*(outs[i].unsqueeze(0)),
-                                            [img_metas[i]], rescale)
+        return (
+            [
+                self.bbox_head.get_boundary(
+                    *(outs[i].unsqueeze(0)), [img_metas[i]], rescale
+                )
                 for i in range(len(img_metas))
             ]
-
-        else:
-            boundaries = [
-                self.bbox_head.get_boundary(*outs, img_metas, rescale)
-            ]
-
-        return boundaries
+            if len(img_metas) > 1
+            else [self.bbox_head.get_boundary(*outs, img_metas, rescale)]
+        )

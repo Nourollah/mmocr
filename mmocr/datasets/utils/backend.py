@@ -51,10 +51,7 @@ class LmdbAnnFileBackend:
             # The lmdb file may contain only the label, or it may contain both
             # the label and the image, so we use image_key here for probing.
             image_key = f'image-{1:09d}'
-            if txn.get(image_key.encode(encoding)) is None:
-                self.label_only = True
-            else:
-                self.label_only = False
+            self.label_only = txn.get(image_key.encode(encoding)) is None
 
     def __getitem__(self, index):
         """Retrieve one line from lmdb file by index.

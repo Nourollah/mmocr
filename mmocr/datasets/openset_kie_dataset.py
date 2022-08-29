@@ -103,10 +103,11 @@ class OpensetKIEDataset(KIEDataset):
         gt_pairs = []
         for i, label in enumerate(labels):
             if label == self.key_node_idx:
-                for j, edge_id in enumerate(edge_ids):
-                    if edge_id == edge_ids[i] and labels[
-                            j] == self.value_node_idx:
-                        gt_pairs.append((i, j))
+                gt_pairs.extend(
+                    (i, j)
+                    for j, edge_id in enumerate(edge_ids)
+                    if edge_id == edge_ids[i] and labels[j] == self.value_node_idx
+                )
 
         return gt_pairs
 
@@ -172,7 +173,7 @@ class OpensetKIEDataset(KIEDataset):
         pairs, pairs_conf = self._decode_pairs_pred(nodes, labels, edges,
                                                     self.edge_thr,
                                                     self.link_type)
-        pred = {
+        return {
             'filename': filename,
             'boxes': boxes,
             'bboxes': bboxes.tolist(),
@@ -180,9 +181,8 @@ class OpensetKIEDataset(KIEDataset):
             'labels_conf': labels_conf.tolist(),
             'texts': texts,
             'pairs': pairs,
-            'pairs_conf': pairs_conf
+            'pairs_conf': pairs_conf,
         }
-        return pred
 
     def decode_gt(self, filename):
         """Decode ground truth.
@@ -197,17 +197,16 @@ class OpensetKIEDataset(KIEDataset):
         bboxes = torch.Tensor(boxes)[:, [0, 1, 4, 5]]
         bboxes = torch.cat([bboxes, labels[:, None].float()], -1)
         pairs = self._decode_pairs_gt(labels, edge_ids)
-        gt = {
+        return {
             'filename': filename,
             'boxes': boxes,
             'bboxes': bboxes.tolist(),
             'labels': labels.tolist(),
-            'labels_conf': [1. for _ in labels],
+            'labels_conf': [1.0 for _ in labels],
             'texts': texts,
             'pairs': pairs,
-            'pairs_conf': [1. for _ in pairs]
+            'pairs_conf': [1.0 for _ in pairs],
         }
-        return gt
 
     def compute_openset_f1(self, preds, gts):
         """Compute openset macro-f1 and micro-f1 score.
@@ -234,14 +233,10 @@ class OpensetKIEDataset(KIEDataset):
         img_level_res = {}
         for pred, gt in zip(preds, gts):
             filename = pred['filename']
-            img_res = {}
             # edge metric related
             pairs_pred = pred['pairs']
             pairs_gt = gt['pairs']
-            img_res['edge_hit_num'] = 0
-            for pair in pairs_gt:
-                if pair in pairs_pred:
-                    img_res['edge_hit_num'] += 1
+            img_res = {'edge_hit_num': sum(pair in pairs_pred for pair in pairs_gt)}
             img_res['edge_recall'] = 1.0 * img_res['edge_hit_num'] / max(
                 1, len(pairs_gt))
             img_res['edge_precision'] = 1.0 * img_res['edge_hit_num'] / max(
@@ -274,8 +269,6 @@ class OpensetKIEDataset(KIEDataset):
             1, total_edge_pred_num)
         edge_f1 = 2 * total_edge_recall * total_edge_precision / max(
             1, total_edge_recall + total_edge_precision)
-        stats = {'edge_openset_f1': edge_f1}
-
         # node f1
         cared_node_hit_num, cared_node_gt_num, cared_node_pred_num = 0, 0, 0
         node_macro_metric = {}
@@ -285,11 +278,19 @@ class OpensetKIEDataset(KIEDataset):
             cared_node_hit_num += total_node_hit_num[node_idx]
             cared_node_gt_num += total_node_gt_num[node_idx]
             cared_node_pred_num += total_node_pred_num[node_idx]
-            node_res = {}
-            node_res['recall'] = 1.0 * total_node_hit_num[node_idx] / max(
-                1, total_node_gt_num[node_idx])
-            node_res['precision'] = 1.0 * total_node_hit_num[node_idx] / max(
-                1, total_node_pred_num[node_idx])
+            node_res = {
+                'recall': (
+                    1.0
+                    * total_node_hit_num[node_idx]
+                    / max(1, total_node_gt_num[node_idx])
+                ),
+                'precision': (
+                    1.0
+                    * total_node_hit_num[node_idx]
+                    / max(1, total_node_pred_num[node_idx])
+                ),
+            }
+
             node_res[
                 'f1'] = 2 * node_res['recall'] * node_res['precision'] / max(
                     1, node_res['recall'] + node_res['precision'])
@@ -302,8 +303,12 @@ class OpensetKIEDataset(KIEDataset):
         node_micro_f1 = 2 * node_micro_recall * node_micro_precision / max(
             1, node_micro_recall + node_micro_precision)
 
-        stats['node_openset_micro_f1'] = node_micro_f1
-        stats['node_openset_macro_f1'] = np.mean(
-            [v['f1'] for k, v in node_macro_metric.items()])
+        stats = {
+            'edge_openset_f1': edge_f1,
+            'node_openset_micro_f1': node_micro_f1,
+            'node_openset_macro_f1': np.mean(
+                [v['f1'] for k, v in node_macro_metric.items()]
+            ),
+        }
 
         return stats

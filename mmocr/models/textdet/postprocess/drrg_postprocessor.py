@@ -36,6 +36,4 @@ class DRRGPostprocessor(BasePostprocessor):
         clusters = connected_components(vertices, score_dict, self.link_thr)
         pred_labels = clusters2labels(clusters, text_comps.shape[0])
         text_comps, pred_labels = remove_single(text_comps, pred_labels)
-        boundaries = comps2boundaries(text_comps, pred_labels)
-
-        return boundaries
+        return comps2boundaries(text_comps, pred_labels)

@@ -19,13 +19,11 @@ def cal_true_positive_char(pred, gt):
     """
 
     all_opt = SequenceMatcher(None, pred, gt)
-    true_positive_char_num = 0
-    for opt, _, _, s2, e2 in all_opt.get_opcodes():
-        if opt == 'equal':
-            true_positive_char_num += (e2 - s2)
-        else:
-            pass
-    return true_positive_char_num
+    return sum(
+        (e2 - s2)
+        for opt, _, _, s2, e2 in all_opt.get_opcodes()
+        if opt == 'equal'
+    )
 
 
 def count_matches(pred_texts, gt_texts):
@@ -113,17 +111,22 @@ def eval_ocr_metric(pred_texts, gt_texts, metric='acc'):
     assert len(pred_texts) == len(gt_texts)
 
     assert isinstance(metric, str) or is_type_list(metric, str)
-    if metric == 'acc' or metric == ['acc']:
+    if metric in ['acc', ['acc']]:
         metric = [
             'word_acc', 'word_acc_ignore_case', 'word_acc_ignore_case_symbol',
             'char_recall', 'char_precision', 'one_minus_ned'
         ]
-    metric = set([metric]) if isinstance(metric, str) else set(metric)
+    metric = {metric} if isinstance(metric, str) else set(metric)
 
-    supported_metrics = set([
-        'word_acc', 'word_acc_ignore_case', 'word_acc_ignore_case_symbol',
-        'char_recall', 'char_precision', 'one_minus_ned'
-    ])
+    supported_metrics = {
+        'word_acc',
+        'word_acc_ignore_case',
+        'word_acc_ignore_case_symbol',
+        'char_recall',
+        'char_precision',
+        'one_minus_ned',
+    }
+
     assert metric.issubset(supported_metrics)
 
     match_res = count_matches(pred_texts, gt_texts)

@@ -86,7 +86,7 @@ class FCENetTargets(TextSnakeTargets):
                 resampled_bot_line = resampled_bot_line[
                     head_shrink_num:len(resampled_bot_line) - tail_shrink_num]
 
-            for i in range(0, len(center_line) - 1):
+            for i in range(len(center_line) - 1):
                 tl = center_line[i] + (resampled_top_line[i] - center_line[i]
                                        ) * self.center_region_shrink_ratio
                 tr = center_line[i + 1] + (
@@ -117,10 +117,7 @@ class FCENetTargets(TextSnakeTargets):
 
         for i in range(len(polygon)):
             p1 = polygon[i]
-            if i == len(polygon) - 1:
-                p2 = polygon[0]
-            else:
-                p2 = polygon[i + 1]
+            p2 = polygon[0] if i == len(polygon) - 1 else polygon[i + 1]
             length.append(((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5)
 
         total_length = sum(length)
@@ -131,11 +128,7 @@ class FCENetTargets(TextSnakeTargets):
         for i in range(len(polygon)):
             num = n_on_each_line[i]
             p1 = polygon[i]
-            if i == len(polygon) - 1:
-                p2 = polygon[0]
-            else:
-                p2 = polygon[i + 1]
-
+            p2 = polygon[0] if i == len(polygon) - 1 else polygon[i + 1]
             if num == 0:
                 continue
 
@@ -160,8 +153,7 @@ class FCENetTargets(TextSnakeTargets):
         index_x = np.argsort(x)
         index_y = np.argmin(y[index_x[:8]])
         index = index_x[index_y]
-        new_polygon = np.concatenate([polygon[index:], polygon[:index]])
-        return new_polygon
+        return np.concatenate([polygon[index:], polygon[:index]])
 
     def poly2fourier(self, polygon, fourier_degree):
         """Perform Fourier transformation to generate Fourier coefficients ck
@@ -175,8 +167,7 @@ class FCENetTargets(TextSnakeTargets):
         """
         points = polygon[:, 0] + polygon[:, 1] * 1j
         c_fft = fft(points) / len(points)
-        c = np.hstack((c_fft[-fourier_degree:], c_fft[:fourier_degree + 1]))
-        return c
+        return np.hstack((c_fft[-fourier_degree:], c_fft[:fourier_degree + 1]))
 
     def clockwise(self, c, fourier_degree):
         """Make sure the polygon reconstructed from Fourier coefficients c in
@@ -215,9 +206,7 @@ class FCENetTargets(TextSnakeTargets):
 
         real_part = np.real(fourier_coeff).reshape((-1, 1))
         image_part = np.imag(fourier_coeff).reshape((-1, 1))
-        fourier_signature = np.hstack([real_part, image_part])
-
-        return fourier_signature
+        return np.hstack([real_part, image_part])
 
     def generate_fourier_maps(self, img_size, text_polys):
         """Generate Fourier coefficient maps.
@@ -276,8 +265,8 @@ class FCENetTargets(TextSnakeTargets):
         h, w = img_size
         lv_size_divs = self.level_size_divisors
         lv_proportion_range = self.level_proportion_range
-        lv_text_polys = [[] for i in range(len(lv_size_divs))]
-        lv_ignore_polys = [[] for i in range(len(lv_size_divs))]
+        lv_text_polys = [[] for _ in range(len(lv_size_divs))]
+        lv_ignore_polys = [[] for _ in range(len(lv_size_divs))]
         level_maps = []
         for poly in text_polys:
             assert len(poly) == 1
@@ -305,13 +294,11 @@ class FCENetTargets(TextSnakeTargets):
                         [ignore_poly[0] / lv_size_divs[ind]])
 
         for ind, size_divisor in enumerate(lv_size_divs):
-            current_level_maps = []
             level_img_size = (h // size_divisor, w // size_divisor)
 
             text_region = self.generate_text_region_mask(
                 level_img_size, lv_text_polys[ind])[None]
-            current_level_maps.append(text_region)
-
+            current_level_maps = [text_region]
             center_region = self.generate_center_region_mask(
                 level_img_size, lv_text_polys[ind])[None]
             current_level_maps.append(center_region)
@@ -322,9 +309,7 @@ class FCENetTargets(TextSnakeTargets):
 
             fourier_real_map, fourier_image_maps = self.generate_fourier_maps(
                 level_img_size, lv_text_polys[ind])
-            current_level_maps.append(fourier_real_map)
-            current_level_maps.append(fourier_image_maps)
-
+            current_level_maps.extend((fourier_real_map, fourier_image_maps))
             level_maps.append(np.concatenate(current_level_maps))
 
         return level_maps

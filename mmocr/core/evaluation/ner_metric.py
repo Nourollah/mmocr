@@ -17,8 +17,7 @@ def gt_label2entity(gt_infos):
         label = gt_info['label']
         for key, value in label.items():
             for _, places in value.items():
-                for place in places:
-                    line_entities.append([key, place[0], place[1]])
+                line_entities.extend([key, place[0], place[1]] for place in places)
         gt_entities.append(line_entities)
     return gt_entities
 
@@ -105,11 +104,7 @@ def eval_ner_f1(results, gt_infos):
     gt_entities = gt_label2entity(gt_infos)
     pred_entities = []
     for i, gt_info in enumerate(gt_infos):
-        line_entities = []
-        for result in results[i]:
-            line_entities.append(result)
+        line_entities = list(results[i])
         pred_entities.append(line_entities)
     assert len(pred_entities) == len(gt_entities)
-    class_info = compute_f1_all(pred_entities, gt_entities)
-
-    return class_info
+    return compute_f1_all(pred_entities, gt_entities)
