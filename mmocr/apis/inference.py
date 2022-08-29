@@ -130,15 +130,17 @@ def model_inference(model,
                 ann_info=ann,
                 bbox_fields=[])
         if ann is not None:
-            data.update(dict(**ann))
+            data |= dict(**ann)
 
         # build the data pipeline
         data = test_pipeline(data)
         # get tensor from list to stack for batch mode (text detection)
-        if batch_mode:
-            if cfg.data.test.pipeline[1].type == 'MultiScaleFlipAug':
-                for key, value in data.items():
-                    data[key] = value[0]
+        if (
+            batch_mode
+            and cfg.data.test.pipeline[1].type == 'MultiScaleFlipAug'
+        ):
+            for key, value in data.items():
+                data[key] = value[0]
         datas.append(data)
 
     if isinstance(datas[0]['img'], list) and len(datas) > 1:
@@ -185,13 +187,8 @@ def model_inference(model,
         results = model(return_loss=False, rescale=True, **data)
 
     if not is_batch:
-        if not return_data:
-            return results[0]
-        return results[0], datas[0]
-    else:
-        if not return_data:
-            return results
-        return results, datas
+        return (results[0], datas[0]) if return_data else results[0]
+    return (results, datas) if return_data else results
 
 
 def text_model_inference(model, input_sentence):

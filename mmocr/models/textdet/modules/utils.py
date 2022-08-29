@@ -21,8 +21,7 @@ def normalize_adjacent_matrix(A):
     d_inv = np.power(d, -0.5).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_inv = np.diag(d_inv)
-    G = A.dot(d_inv).transpose().dot(d_inv)
-    return G
+    return A.dot(d_inv).transpose().dot(d_inv)
 
 
 def euclidean_distance_matrix(A, B):
@@ -48,8 +47,7 @@ def euclidean_distance_matrix(A, B):
 
     zero_mask = np.less(D_squared, 0.0)
     D_squared[zero_mask] = 0.0
-    D = np.sqrt(D_squared)
-    return D
+    return np.sqrt(D_squared)
 
 
 def feature_embedding(input_feats, out_feat_len):

@@ -19,8 +19,7 @@ def parse_args():
         '--camera-id', type=int, default=0, help='Camera device id.')
     parser.add_argument(
         '--score-thr', type=float, default=0.5, help='Bbox score threshold.')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main():
@@ -38,7 +37,7 @@ def main():
         result = model_inference(model, img)
 
         ch = cv2.waitKey(1)
-        if ch == 27 or ch == ord('q') or ch == ord('Q'):
+        if ch in [27, ord('q'), ord('Q')]:
             break
 
         model.show_result(

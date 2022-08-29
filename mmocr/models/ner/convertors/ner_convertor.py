@@ -45,7 +45,7 @@ class NerConvertor:
 
         if self.annotation_type == 'bio':
             self.label2id_dict, self.id2label, self.ignore_id = \
-                self._generate_labelid_dict()
+                    self._generate_labelid_dict()
         elif self.annotation_type == 'bioes':
             raise NotImplementedError('Bioes format is not supported yet!')
 
@@ -68,9 +68,9 @@ class NerConvertor:
         for index, category in enumerate(self.categories):
             start_label = index + 1
             end_label = index + 1 + num_classes
-            label2id_dict.update({category: [start_label, end_label]})
-            id2label_dict.update({start_label: 'B-' + category})
-            id2label_dict.update({end_label: 'I-' + category})
+            label2id_dict[category] = [start_label, end_label]
+            id2label_dict[start_label] = f'B-{category}'
+            id2label_dict[end_label] = f'I-{category}'
 
         return label2id_dict, id2label_dict, ignore_id
 
@@ -145,29 +145,28 @@ class NerConvertor:
             for index, tag in enumerate(results):
                 if not isinstance(tag, str):
                     tag = self.id2label[tag]
-                if self.annotation_type == 'bio':
-                    if tag.startswith('B-'):
-                        if entity[2] != -1 and entity[1] < entity[2]:
-                            entities.append(entity)
-                        entity = [-1, -1, -1]
-                        entity[1] = index
-                        entity[0] = tag.split('-')[1]
-                        entity[2] = index
-                        if index == len(results) - 1 and entity[1] < entity[2]:
-                            entities.append(entity)
-                    elif tag.startswith('I-') and entity[1] != -1:
-                        _type = tag.split('-')[1]
-                        if _type == entity[0]:
-                            entity[2] = index
-
-                        if index == len(results) - 1 and entity[1] < entity[2]:
-                            entities.append(entity)
-                    else:
-                        if entity[2] != -1 and entity[1] < entity[2]:
-                            entities.append(entity)
-                        entity = [-1, -1, -1]
-                else:
+                if self.annotation_type != 'bio':
                     raise NotImplementedError(
                         'The data format is not supported yet!')
+                if tag.startswith('B-'):
+                    if entity[2] != -1 and entity[1] < entity[2]:
+                        entities.append(entity)
+                    entity = [-1, -1, -1]
+                    entity[1] = index
+                    entity[0] = tag.split('-')[1]
+                    entity[2] = index
+                    if index == len(results) - 1 and entity[1] < entity[2]:
+                        entities.append(entity)
+                elif tag.startswith('I-') and entity[1] != -1:
+                    _type = tag.split('-')[1]
+                    if _type == entity[0]:
+                        entity[2] = index
+
+                    if index == len(results) - 1 and entity[1] < entity[2]:
+                        entities.append(entity)
+                else:
+                    if entity[2] != -1 and entity[1] < entity[2]:
+                        entities.append(entity)
+                    entity = [-1, -1, -1]
             pred_entities.append(entities)
         return pred_entities

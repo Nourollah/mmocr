@@ -56,10 +56,9 @@ class DRRGLoss(nn.Module):
             negative_count = 100
         negative_loss, _ = torch.topk(negative_loss.view(-1), negative_count)
 
-        balance_loss = (positive_loss + torch.sum(negative_loss)) / (
-            float(positive_count + negative_count) + 1e-5)
-
-        return balance_loss
+        return (positive_loss + torch.sum(negative_loss)) / (
+            float(positive_count + negative_count) + 1e-5
+        )
 
     def gcn_loss(self, gcn_data):
         """CrossEntropy Loss from gcn module.
@@ -75,9 +74,7 @@ class DRRGLoss(nn.Module):
         """
         gcn_pred, gt_labels = gcn_data
         gt_labels = gt_labels.view(-1).to(gcn_pred.device)
-        loss = F.cross_entropy(gcn_pred, gt_labels)
-
-        return loss
+        return F.cross_entropy(gcn_pred, gt_labels)
 
     def bitmasks2tensor(self, bitmasks, target_sz):
         """Convert Bitmasks to tensor.
@@ -242,12 +239,11 @@ class DRRGLoss(nn.Module):
 
         loss_gcn = self.gcn_loss(gcn_data)
 
-        results = dict(
+        return dict(
             loss_text=loss_text,
             loss_center=loss_center,
             loss_height=loss_height,
             loss_sin=loss_sin,
             loss_cos=loss_cos,
-            loss_gcn=loss_gcn)
-
-        return results
+            loss_gcn=loss_gcn,
+        )

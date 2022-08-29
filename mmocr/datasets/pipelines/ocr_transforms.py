@@ -253,8 +253,7 @@ class FancyPCA:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -315,8 +314,7 @@ class RandomPaddingOCR:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -385,20 +383,22 @@ class RandomRotateImageBox:
                 temp_bbox.append(
                     RandomRotateImageBox.rotate_point(point, angle, center))
             poly_temp_bbox = Polygon(temp_bbox).buffer(0)
-            if poly_temp_bbox.is_valid:
-                if img_box.intersects(poly_temp_bbox) and (
-                        not img_box.touches(poly_temp_bbox)):
-                    temp_bbox_area = poly_temp_bbox.area
+            if (
+                poly_temp_bbox.is_valid
+                and img_box.intersects(poly_temp_bbox)
+                and (not img_box.touches(poly_temp_bbox))
+            ):
+                temp_bbox_area = poly_temp_bbox.area
 
-                    intersect_area = img_box.intersection(poly_temp_bbox).area
-                    intersect_ratio = intersect_area / temp_bbox_area
+                intersect_area = img_box.intersection(poly_temp_bbox).area
+                intersect_ratio = intersect_area / temp_bbox_area
 
-                    if intersect_ratio >= 0.7:
-                        out_box = []
-                        for p in temp_bbox:
-                            out_box.extend(p)
-                        out_boxes.append(out_box)
-                        out_chars.append(chars[idx])
+                if intersect_ratio >= 0.7:
+                    out_box = []
+                    for p in temp_bbox:
+                        out_box.extend(p)
+                    out_boxes.append(out_box)
+                    out_chars.append(chars[idx])
 
         return out_boxes, out_chars
 
@@ -431,8 +431,7 @@ class OpencvToPil:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -450,5 +449,4 @@ class PilToOpencv:
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__

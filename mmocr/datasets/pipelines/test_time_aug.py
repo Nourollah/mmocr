@@ -84,14 +84,12 @@ class MultiRotateAugOCR:
         aug_data = []
         for degree in set(rotate_degrees):
             _results = results.copy()
-            if degree == 0:
-                pass
-            elif degree == 90:
-                _results['img'] = np.rot90(_results['img'], 1)
-            elif degree == 180:
+            if degree == 180:
                 _results['img'] = np.rot90(_results['img'], 2)
             elif degree == 270:
                 _results['img'] = np.rot90(_results['img'], 3)
+            elif degree == 90:
+                _results['img'] = np.rot90(_results['img'], 1)
             data = self.transforms(_results)
             aug_data.append(data)
         # list of dict to dict of list

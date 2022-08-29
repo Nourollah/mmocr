@@ -34,6 +34,4 @@ class OCRDataset(BaseDataset):
             gt_texts.append(text)
             pred_texts.append(results[i]['text'])
 
-        eval_results = eval_ocr_metric(pred_texts, gt_texts, metric=metric)
-
-        return eval_results
+        return eval_ocr_metric(pred_texts, gt_texts, metric=metric)

@@ -26,7 +26,7 @@ class OneOfWrapper:
     """
 
     def __init__(self, transforms):
-        assert isinstance(transforms, list) or isinstance(transforms, tuple)
+        assert isinstance(transforms, (list, tuple))
         assert len(transforms) > 0, 'Need at least one transform.'
         self.transforms = []
         for t in transforms:

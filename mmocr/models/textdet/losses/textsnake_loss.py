@@ -45,10 +45,9 @@ class TextSnakeLoss(nn.Module):
             negative_count = 100
         negative_loss, _ = torch.topk(negative_loss.view(-1), negative_count)
 
-        balance_loss = (positive_loss + torch.sum(negative_loss)) / (
-            float(positive_count + negative_count) + 1e-5)
-
-        return balance_loss
+        return (positive_loss + torch.sum(negative_loss)) / (
+            float(positive_count + negative_count) + 1e-5
+        )
 
     def bitmasks2tensor(self, bitmasks, target_sz):
         """Convert Bitmasks to tensor.
@@ -190,11 +189,10 @@ class TextSnakeLoss(nn.Module):
             loss_sin = torch.tensor(0.0, device=device)
             loss_cos = torch.tensor(0.0, device=device)
 
-        results = dict(
+        return dict(
             loss_text=loss_text,
             loss_center=loss_center,
             loss_radius=loss_radius,
             loss_sin=loss_sin,
-            loss_cos=loss_cos)
-
-        return results
+            loss_cos=loss_cos,
+        )

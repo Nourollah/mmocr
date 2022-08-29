@@ -49,5 +49,4 @@ def sort_vertex8(points):
     """Sort vertex with 8 points [x1 y1 x2 y2 x3 y3 x4 y4]"""
     assert len(points) == 8
     vertices = _sort_vertex(np.array(points, dtype=np.float32).reshape(-1, 2))
-    sorted_box = list(vertices.flatten())
-    return sorted_box
+    return list(vertices.flatten())

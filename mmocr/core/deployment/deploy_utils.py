@@ -30,8 +30,7 @@ def inference_with_session(sess, io_binding, input_name, output_names,
     for name in output_names:
         io_binding.bind_output(name)
     sess.run_with_iobinding(io_binding)
-    pred = io_binding.copy_outputs_to_cpu()
-    return pred
+    return io_binding.copy_outputs_to_cpu()
 
 
 @DETECTORS.register_module()
@@ -54,7 +53,7 @@ class ONNXRuntimeDetector(TextDetectorMixin, SingleStageTextDetector):
         try:
             from mmcv.ops import get_onnxruntime_op_path
             ort_custom_op_path = get_onnxruntime_op_path()
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             warnings.warn('If input model has custom op from mmcv, \
                 you may have to build mmcv with ONNXRuntime from source.')
         session_options = ort.SessionOptions()
@@ -95,19 +94,16 @@ class ONNXRuntimeDetector(TextDetectorMixin, SingleStageTextDetector):
         onnx_pred = inference_with_session(self.sess, self.io_binding, 'input',
                                            self.output_names, img)
         onnx_pred = torch.from_numpy(onnx_pred[0])
-        if len(img_metas) > 1:
-            boundaries = [
-                self.bbox_head.get_boundary(*(onnx_pred[i].unsqueeze(0)),
-                                            [img_metas[i]], rescale)
+        return (
+            [
+                self.bbox_head.get_boundary(
+                    *(onnx_pred[i].unsqueeze(0)), [img_metas[i]], rescale
+                )
                 for i in range(len(img_metas))
             ]
-
-        else:
-            boundaries = [
-                self.bbox_head.get_boundary(*onnx_pred, img_metas, rescale)
-            ]
-
-        return boundaries
+            if len(img_metas) > 1
+            else [self.bbox_head.get_boundary(*onnx_pred, img_metas, rescale)]
+        )
 
 
 @DETECTORS.register_module()
@@ -129,7 +125,7 @@ class ONNXRuntimeRecognizer(EncodeDecodeRecognizer):
         try:
             from mmcv.ops import get_onnxruntime_op_path
             ort_custom_op_path = get_onnxruntime_op_path()
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             warnings.warn('If input model has custom op from mmcv, \
                 you may have to build mmcv with ONNXRuntime from source.')
         session_options = ort.SessionOptions()
@@ -164,9 +160,8 @@ class ONNXRuntimeRecognizer(EncodeDecodeRecognizer):
                     imgs[idx] = each_img.unsqueeze(0)
             imgs = imgs[0]  # avoid aug_test
             img_metas = img_metas[0]
-        else:
-            if len(img_metas) == 1 and isinstance(img_metas[0], list):
-                img_metas = img_metas[0]
+        elif len(img_metas) == 1 and isinstance(img_metas[0], list):
+            img_metas = img_metas[0]
         return self.simple_test(imgs, img_metas=img_metas)
 
     def extract_feat(self, imgs):
@@ -193,12 +188,10 @@ class ONNXRuntimeRecognizer(EncodeDecodeRecognizer):
             onnx_pred, img_metas)
         label_strings = self.label_convertor.idx2str(label_indexes)
 
-        # flatten batch results
-        results = []
-        for string, score in zip(label_strings, label_scores):
-            results.append(dict(text=string, score=score))
-
-        return results
+        return [
+            dict(text=string, score=score)
+            for string, score in zip(label_strings, label_scores)
+        ]
 
 
 @DETECTORS.register_module()
@@ -217,7 +210,7 @@ class TensorRTDetector(TextDetectorMixin, SingleStageTextDetector):
         from mmcv.tensorrt import TRTWrapper, load_tensorrt_plugin
         try:
             load_tensorrt_plugin()
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             warnings.warn('If input model has custom op from mmcv, \
                 you may have to build mmcv with TensorRT from source.')
         model = TRTWrapper(
@@ -242,19 +235,16 @@ class TensorRTDetector(TextDetectorMixin, SingleStageTextDetector):
                     rescale: bool = False):
         with torch.cuda.device(self.device_id), torch.no_grad():
             trt_pred = self.model({'input': img})['output']
-        if len(img_metas) > 1:
-            boundaries = [
-                self.bbox_head.get_boundary(*(trt_pred[i].unsqueeze(0)),
-                                            [img_metas[i]], rescale)
+        return (
+            [
+                self.bbox_head.get_boundary(
+                    *(trt_pred[i].unsqueeze(0)), [img_metas[i]], rescale
+                )
                 for i in range(len(img_metas))
             ]
-
-        else:
-            boundaries = [
-                self.bbox_head.get_boundary(*trt_pred, img_metas, rescale)
-            ]
-
-        return boundaries
+            if len(img_metas) > 1
+            else [self.bbox_head.get_boundary(*trt_pred, img_metas, rescale)]
+        )
 
 
 @DETECTORS.register_module()
@@ -272,7 +262,7 @@ class TensorRTRecognizer(EncodeDecodeRecognizer):
         from mmcv.tensorrt import TRTWrapper, load_tensorrt_plugin
         try:
             load_tensorrt_plugin()
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             warnings.warn('If input model has custom op from mmcv, \
                 you may have to build mmcv with TensorRT from source.')
         model = TRTWrapper(
@@ -292,9 +282,8 @@ class TensorRTRecognizer(EncodeDecodeRecognizer):
                     imgs[idx] = each_img.unsqueeze(0)
             imgs = imgs[0]  # avoid aug_test
             img_metas = img_metas[0]
-        else:
-            if len(img_metas) == 1 and isinstance(img_metas[0], list):
-                img_metas = img_metas[0]
+        elif len(img_metas) == 1 and isinstance(img_metas[0], list):
+            img_metas = img_metas[0]
         return self.simple_test(imgs, img_metas=img_metas)
 
     def extract_feat(self, imgs):
@@ -320,9 +309,7 @@ class TensorRTRecognizer(EncodeDecodeRecognizer):
             trt_pred, img_metas)
         label_strings = self.label_convertor.idx2str(label_indexes)
 
-        # flatten batch results
-        results = []
-        for string, score in zip(label_strings, label_scores):
-            results.append(dict(text=string, score=score))
-
-        return results
+        return [
+            dict(text=string, score=score)
+            for string, score in zip(label_strings, label_scores)
+        ]

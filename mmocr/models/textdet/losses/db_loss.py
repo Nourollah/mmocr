@@ -94,15 +94,12 @@ class DBLoss(nn.Module):
 
         negative_loss, _ = torch.topk(negative_loss.view(-1), negative_count)
 
-        balance_loss = (positive_loss.sum() + negative_loss.sum()) / (
-            positive_count + negative_count + self.eps)
-
-        return balance_loss
+        return (positive_loss.sum() + negative_loss.sum()) / (
+            positive_count + negative_count + self.eps
+        )
 
     def l1_thr_loss(self, pred, gt, mask):
-        thr_loss = torch.abs((pred - gt) * mask).sum() / (
-            mask.sum() + self.eps)
-        return thr_loss
+        return torch.abs((pred - gt) * mask).sum() / (mask.sum() + self.eps)
 
     def forward(self, preds, downsample_ratio, gt_shrink, gt_shrink_mask,
                 gt_thr, gt_thr_mask):
@@ -157,9 +154,8 @@ class DBLoss(nn.Module):
         loss_thr = self.l1_thr_loss(pred_thr, gt['gt_thr'][0],
                                     gt['gt_thr_mask'][0])
 
-        results = dict(
+        return dict(
             loss_prob=self.alpha * loss_prob,
             loss_db=loss_db,
-            loss_thr=self.beta * loss_thr)
-
-        return results
+            loss_thr=self.beta * loss_thr,
+        )

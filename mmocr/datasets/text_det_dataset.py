@@ -116,7 +116,7 @@ class TextDetDataset(BaseDataset):
             img_infos.append(img_info)
             ann_infos.append(ann_info)
 
-        eval_results = eval_hmean(
+        return eval_hmean(
             results,
             img_infos,
             ann_infos,
@@ -126,6 +126,5 @@ class TextDetDataset(BaseDataset):
             max_score_thr=max_score_thr,
             step=step,
             logger=logger,
-            rank_list=rank_list)
-
-        return eval_results
+            rank_list=rank_list,
+        )

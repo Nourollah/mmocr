@@ -112,13 +112,10 @@ class BertModel(nn.Module):
         # sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output)
 
-        # add hidden_states and attentions if they are here
-        # sequence_output, pooled_output, (hidden_states), (attentions)
-        outputs = (
+        return (
             sequence_output,
             pooled_output,
         ) + tuple(encoder_outputs)
-        return outputs
 
     def _init_weights(self, module):
         """Initialize the weights."""
@@ -304,9 +301,7 @@ class BertLayer(nn.Module):
         attention_output = attention_outputs[0]
         intermediate_output = self.intermediate(attention_output)
         layer_output = self.output(intermediate_output, attention_output)
-        outputs = (layer_output, ) + attention_outputs[
-            1:]  # add attentions if we output them
-        return outputs
+        return (layer_output,) + attention_outputs[1:]
 
 
 class BertSelfAttention(nn.Module):
@@ -380,10 +375,11 @@ class BertSelfAttention(nn.Module):
             self.all_head_size, )
         context_layer = context_layer.view(*new_context_layer_shape)
 
-        outputs = (context_layer,
-                   attention_probs) if self.output_attentions else (
-                       context_layer, )
-        return outputs
+        return (
+            (context_layer, attention_probs)
+            if self.output_attentions
+            else (context_layer,)
+        )
 
 
 class BertSelfOutput(nn.Module):
@@ -435,9 +431,7 @@ class BertAttention(nn.Module):
     def forward(self, input_tensor, attention_mask=None, head_mask=None):
         self_outputs = self.self(input_tensor, attention_mask, head_mask)
         attention_output = self.output(self_outputs[0], input_tensor)
-        outputs = (attention_output,
-                   ) + self_outputs[1:]  # add attentions if we output them
-        return outputs
+        return (attention_output,) + self_outputs[1:]
 
 
 class BertIntermediate(nn.Module):

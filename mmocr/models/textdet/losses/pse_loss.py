@@ -54,8 +54,6 @@ class PSELoss(PANLoss):
         assert check_argument.is_type_list(gt_kernels, BitmapMasks)
         assert check_argument.is_type_list(gt_mask, BitmapMasks)
         assert isinstance(downsample_ratio, float)
-        losses = []
-
         pred_texts = score_maps[:, 0, :, :]
         pred_kernels = score_maps[:, 1:, :, :]
         feature_sz = score_maps.size()
@@ -73,8 +71,7 @@ class PSELoss(PANLoss):
                                              gt_kernels[0], gt_mask[0])
         loss_texts = self.dice_loss_with_logits(pred_texts, gt_kernels[0],
                                                 sampled_masks_text)
-        losses.append(self.alpha * loss_texts)
-
+        losses = [self.alpha * loss_texts]
         # compute kernel loss
         if self.kernel_sample_type == 'hard':
             sampled_masks_kernel = (gt_kernels[0] > 0.5).float() * (
@@ -102,5 +99,4 @@ class PSELoss(PANLoss):
             losses = [item.sum() for item in losses]
         else:
             raise NotImplementedError
-        results = dict(loss_text=losses[0], loss_kernel=losses[1])
-        return results
+        return dict(loss_text=losses[0], loss_kernel=losses[1])

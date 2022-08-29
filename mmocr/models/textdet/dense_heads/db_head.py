@@ -80,16 +80,17 @@ class DBHead(HeadMixin, BaseModule):
         prob_map = self.binarize(inputs)
         thr_map = self.threshold(inputs)
         binary_map = self.diff_binarize(prob_map, thr_map, k=50)
-        outputs = torch.cat((prob_map, thr_map, binary_map), dim=1)
-        return outputs
+        return torch.cat((prob_map, thr_map, binary_map), dim=1)
 
     def _init_thr(self, inner_channels, bias=False):
         in_channels = inner_channels
-        seq = Sequential(
-            nn.Conv2d(
-                in_channels, inner_channels // 4, 3, padding=1, bias=bias),
-            nn.BatchNorm2d(inner_channels // 4), nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(inner_channels // 4, inner_channels // 4, 2, 2),
-            nn.BatchNorm2d(inner_channels // 4), nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(inner_channels // 4, 1, 2, 2), nn.Sigmoid())
-        return seq
+        return Sequential(
+            nn.Conv2d(in_channels, in_channels // 4, 3, padding=1, bias=bias),
+            nn.BatchNorm2d(in_channels // 4),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(in_channels // 4, in_channels // 4, 2, 2),
+            nn.BatchNorm2d(in_channels // 4),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(in_channels // 4, 1, 2, 2),
+            nn.Sigmoid(),
+        )

@@ -12,4 +12,4 @@ class BasePostprocessor:
     def is_valid_instance(self, area, confidence, area_thresh,
                           confidence_thresh):
 
-        return bool(area >= area_thresh and confidence > confidence_thresh)
+        return area >= area_thresh and confidence > confidence_thresh

@@ -41,9 +41,9 @@ class NerClassifier(BaseRecognizer):
     def forward_test(self, imgs, img_metas, **kwargs):
         encode_out = self.encoder(img_metas)
         _, preds = self.decoder(encode_out)
-        pred_entities = self.label_convertor.convert_pred2entities(
-            preds, img_metas['attention_masks'])
-        return pred_entities
+        return self.label_convertor.convert_pred2entities(
+            preds, img_metas['attention_masks']
+        )
 
     def aug_test(self, imgs, img_metas, **kwargs):
         raise NotImplementedError('Augmentation test is not implemented yet.')

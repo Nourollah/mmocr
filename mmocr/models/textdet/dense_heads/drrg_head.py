@@ -252,6 +252,4 @@ class DRRGHead(HeadMixin, BaseModule):
                 boundaries,
                 1.0 / self.downsample_ratio / img_metas[0]['scale_factor'])
 
-        results = dict(boundary_result=boundaries)
-
-        return results
+        return dict(boundary_result=boundaries)

@@ -38,19 +38,19 @@ train1 = dict(
     pipeline=None,
     test_mode=False)
 
-train2 = {key: value for key, value in train1.items()}
+train2 = dict(train1)
 train2['img_prefix'] = train_img_prefix2
 train2['ann_file'] = train_ann_file2
 
-train3 = {key: value for key, value in train1.items()}
+train3 = dict(train1)
 train3['img_prefix'] = train_img_prefix3
 train3['ann_file'] = train_ann_file3
 
-train4 = {key: value for key, value in train1.items()}
+train4 = dict(train1)
 train4['img_prefix'] = train_img_prefix4
 train4['ann_file'] = train_ann_file4
 
-train5 = {key: value for key, value in train1.items()}
+train5 = dict(train1)
 train5['img_prefix'] = train_img_prefix5
 train5['ann_file'] = train_ann_file5
 
@@ -70,11 +70,11 @@ train6 = dict(
     pipeline=None,
     test_mode=False)
 
-train7 = {key: value for key, value in train6.items()}
+train7 = dict(train6)
 train7['img_prefix'] = train_img_prefix7
 train7['ann_file'] = train_ann_file7
 
-train8 = {key: value for key, value in train6.items()}
+train8 = dict(train6)
 train8['img_prefix'] = train_img_prefix8
 train8['ann_file'] = train_ann_file8
 

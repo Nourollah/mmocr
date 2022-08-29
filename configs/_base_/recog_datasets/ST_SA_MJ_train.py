@@ -25,7 +25,7 @@ train_ann_file2 = f'{train_root}/SynthText/label.lmdb'
 train_img_prefix3 = f'{train_root}/SynthText_Add'
 train_ann_file3 = f'{train_root}/SynthText_Add/label.txt'
 
-train2 = {key: value for key, value in train1.items()}
+train2 = dict(train1)
 train2['img_prefix'] = train_img_prefix2
 train2['ann_file'] = train_ann_file2
 

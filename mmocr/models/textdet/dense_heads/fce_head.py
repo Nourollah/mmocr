@@ -115,8 +115,7 @@ class FCEHead(HeadMixin, BaseModule):
         """
         cls_res, reg_res = multi_apply(self.forward_single, feats)
         level_num = len(cls_res)
-        preds = [[cls_res[i], reg_res[i]] for i in range(level_num)]
-        return preds
+        return [[cls_res[i], reg_res[i]] for i in range(level_num)]
 
     def forward_single(self, x):
         cls_predict = self.out_conv_cls(x)
@@ -139,8 +138,7 @@ class FCEHead(HeadMixin, BaseModule):
             boundaries = self.resize_boundary(
                 boundaries, 1.0 / img_metas[0]['scale_factor'])
 
-        results = dict(boundary_result=boundaries)
-        return results
+        return dict(boundary_result=boundaries)
 
     def _get_boundary_single(self, score_map, scale):
         assert len(score_map) == 2

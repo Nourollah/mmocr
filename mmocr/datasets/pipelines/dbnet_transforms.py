@@ -25,24 +25,24 @@ class AugmenterBuilder:
             arg_list = [self.to_tuple_if_list(a) for a in args[1:]]
             return getattr(iaa, args[0])(*arg_list)
         if isinstance(args, dict):
-            if 'cls' in args:
-                cls = getattr(iaa, args['cls'])
-                return cls(
-                    **{
-                        k: self.to_tuple_if_list(v)
-                        for k, v in args.items() if not k == 'cls'
-                    })
-            else:
+            if 'cls' not in args:
                 return {
                     key: self.build(value, root=False)
                     for key, value in args.items()
                 }
-        raise RuntimeError('unknown augmenter arg: ' + str(args))
+            cls = getattr(iaa, args['cls'])
+            return cls(
+                **{
+                    k: self.to_tuple_if_list(v)
+                    for k, v in args.items()
+                    if k != 'cls'
+                }
+            )
+
+        raise RuntimeError(f'unknown augmenter arg: {str(args)}')
 
     def to_tuple_if_list(self, obj):
-        if isinstance(obj, list):
-            return tuple(obj)
-        return obj
+        return tuple(obj) if isinstance(obj, list) else obj
 
 
 @PIPELINES.register_module()
@@ -117,12 +117,10 @@ class ImgAug:
             imgaug.BoundingBoxesOnImage(imgaug_bboxes, shape=ori_shape)
         ])[0].clip_out_of_image()
 
-        new_bboxes = []
-        for box in imgaug_bboxes.bounding_boxes:
-            new_bboxes.append(
-                np.array([box.x1, box.y1, box.x2, box.y2], dtype=np.float32))
-
-        return new_bboxes
+        return [
+            np.array([box.x1, box.y1, box.x2, box.y2], dtype=np.float32)
+            for box in imgaug_bboxes.bounding_boxes
+        ]
 
     def may_augment_poly(self, aug, img_shape, polys):
         imgaug_polys = []
@@ -136,9 +134,7 @@ class ImgAug:
 
         new_polys = []
         for poly in imgaug_polys.polygons:
-            new_poly = []
-            for point in poly:
-                new_poly.append(np.array(point, dtype=np.float32))
+            new_poly = [np.array(point, dtype=np.float32) for point in poly]
             new_poly = np.array(new_poly, dtype=np.float32).flatten()
             new_polys.append([new_poly])
 
@@ -159,10 +155,13 @@ class ImgAug:
         new_polys = []
         start_idx = 0
         for poly_point_num in poly_point_nums:
-            new_poly = []
-            for key_point in key_points[start_idx:(start_idx +
-                                                   poly_point_num)]:
-                new_poly.append([key_point.x, key_point.y])
+            new_poly = [
+                [key_point.x, key_point.y]
+                for key_point in key_points[
+                    start_idx : (start_idx + poly_point_num)
+                ]
+            ]
+
             start_idx += poly_point_num
             new_poly = np.array(new_poly).flatten()
             new_polys.append([new_poly])
@@ -170,8 +169,7 @@ class ImgAug:
         return new_polys
 
     def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
+        return self.__class__.__name__
 
 
 @PIPELINES.register_module()
@@ -234,17 +232,13 @@ class EastRandomCrop:
         poly = np.array(poly)
         if poly[:, 0].min() < x or poly[:, 0].max() > x + w:
             return False
-        if poly[:, 1].min() < y or poly[:, 1].max() > y + h:
-            return False
-        return True
+        return poly[:, 1].min() >= y and poly[:, 1].max() <= y + h
 
     def is_poly_outside_rect(self, poly, x, y, w, h):
         poly = np.array(poly).reshape(-1, 2)
         if poly[:, 0].max() < x or poly[:, 0].min() > x + w:
             return True
-        if poly[:, 1].max() < y or poly[:, 1].min() > y + h:
-            return True
-        return False
+        return poly[:, 1].max() < y or poly[:, 1].min() > y + h
 
     def split_regions(self, axis):
         regions = []
@@ -298,11 +292,13 @@ class EastRandomCrop:
         h_regions = self.split_regions(h_axis)
         w_regions = self.split_regions(w_axis)
 
-        for i in range(self.max_tries):
-            if len(w_regions) > 1:
-                xmin, xmax = self.region_wise_random_select(w_regions)
-            else:
-                xmin, xmax = self.random_select(w_axis, w)
+        for _ in range(self.max_tries):
+            xmin, xmax = (
+                self.region_wise_random_select(w_regions)
+                if len(w_regions) > 1
+                else self.random_select(w_axis, w)
+            )
+
             if len(h_regions) > 1:
                 ymin, ymax = self.region_wise_random_select(h_regions)
             else:

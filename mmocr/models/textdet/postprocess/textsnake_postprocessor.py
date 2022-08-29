@@ -60,7 +60,7 @@ class TextSnakePostprocessor(BasePostprocessor):
         pred_text_mask = pred_text_score > self.min_text_region_confidence
         pred_center_score = preds[1] * pred_text_score
         pred_center_mask = \
-            pred_center_score > self.min_center_region_confidence
+                pred_center_score > self.min_center_region_confidence
         pred_sin = preds[2]
         pred_cos = preds[3]
         pred_radius = preds[4]

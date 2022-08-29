@@ -42,8 +42,7 @@ class DRRG(TextDetectorMixin, SingleStageTextDetector):
         x = self.extract_feat(img)
         gt_comp_attribs = kwargs.pop('gt_comp_attribs')
         preds = self.bbox_head(x, gt_comp_attribs)
-        losses = self.bbox_head.loss(preds, **kwargs)
-        return losses
+        return self.bbox_head.loss(preds, **kwargs)
 
     def simple_test(self, img, img_metas, rescale=False):
 

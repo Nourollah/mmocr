@@ -29,7 +29,7 @@ def points2boundary(points, text_repr_type, text_score=None, min_width=-1):
         vertices = cv2.boxPoints(rect)
         boundary = []
         if min(rect[1]) > min_width:
-            boundary = [p for p in vertices.flatten().tolist()]
+            boundary = list(vertices.flatten().tolist())
 
     elif text_repr_type == 'poly':
 
@@ -45,10 +45,7 @@ def points2boundary(points, text_repr_type, text_score=None, min_width=-1):
 
     if text_score is not None:
         boundary = boundary + [text_score]
-    if len(boundary) < 8:
-        return None
-
-    return boundary
+    return None if len(boundary) < 8 else boundary
 
 
 def seg2boundary(seg, text_repr_type, text_score=None):
@@ -70,11 +67,11 @@ def seg2boundary(seg, text_repr_type, text_score=None):
     points = np.where(seg)
     # x, y order
     points = np.concatenate([points[1], points[0]]).reshape(2, -1).transpose()
-    boundary = None
-    if len(points) != 0:
-        boundary = points2boundary(points, text_repr_type, text_score)
-
-    return boundary
+    return (
+        points2boundary(points, text_repr_type, text_score)
+        if len(points) != 0
+        else None
+    )
 
 
 def extract_boundary(result):
